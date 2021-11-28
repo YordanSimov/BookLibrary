@@ -1,0 +1,28 @@
+﻿@model BookLibrary.ViewModels.AddBookViewModel
+@{
+    this.ViewData["Title"] = "Add book";
+}
+<h1 class="text-center">Add new book here.</h1>
+<div class="container">
+    <form method="post" enctype="multipart/form-data">
+        <label asp-for="Title"></label>
+        <input asp-for="Title" class="form-control" type="text" required />
+        <br />
+        <label asp-for="Authors"></label>
+        <input asp-for="Authors" class="form-control" type="text" required />
+        <br />
+        <label asp-for="Description"></label>
+        <textarea asp-for="Description" rows="5" class="form-control" required></textarea>
+        <br />
+        <label asp-for="Publisher"></label>
+        <input asp-for="Publisher" class="form-control" type="text" required />
+        <br />
+        <label asp-for="Pages"></label>
+        <input asp-for="Pages" class="form-control" type="number" required />
+        <br />
+        <label asp-for="Genres"></label>
+        <input asp-for="Genres" class="form-control" type="text" required />
+        <br />
+        <input type="submit" class="btn btn-primary" />
+    </form>
+</div>

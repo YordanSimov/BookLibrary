@@ -1,0 +1,17 @@
+﻿@model BookLibrary.ViewModels.LoginViewModel
+@{
+    this.ViewData["Title"] = "Login";
+}
+<h1 class="text-center mb-4">Login</h1>
+<div class="container col-md-4">
+    <form method="post" enctype="multipart/form-data">
+        <label asp-for="Username"></label>
+        <span asp-validation-for="Username" class="small text-danger"></span>
+        <input asp-for="Username" class="form-control" type="text" required />
+        <label asp-for="Password"></label>
+        <span asp-validation-for="Username" class="small text-danger"></span>
+        <input asp-for="Password" class="form-control" type="password" required />
+        <br />
+        <input type="submit" class="btn btn-primary" />
+    </form>
+</div>
