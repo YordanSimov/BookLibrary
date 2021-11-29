@@ -1,8 +1,6 @@
 ﻿@model BookLibrary.ViewModels.ListOfAllBooksViewModel
 @using System.Text;
-@{
-    this.ViewData["Title"] = "Home Page";
-}
+@{ this.ViewData["Title"] = "Home Page"; }
 
 <div class="text-center">
     <h1 class="display-4">Welcome to Book Library!</h1>
@@ -10,41 +8,41 @@
 <br />
 @foreach (var book in Model.Books)
 {
- <div class="row d-inline-block mr-5 ml-5">
-     <div class="card" style="width: 18rem;">
-         <div class="card-body">
-             <h5 class="card-title">@book.Title</h5>
-             @{
-                 var genreStringBuilder = new StringBuilder();
-                 var authorStringBuilder = new StringBuilder();
-                 foreach (var genre in book.Genres)
-                 {
-                     var genreName = genre.Genre.Name;
-                     genreStringBuilder.Append(genreName + ",");
-                 }
- 
-                 foreach (var author in book.Authors)
-                 {
-                     var authorName = author.Author.Name;
-                     authorStringBuilder.Append(authorName + ",");
-                 }
-             }
-             <h6 class="card-subtitle mb-2 text-muted">@authorStringBuilder.ToString()</h6>
-             <p class="card-text">@book.Description</p>
-             <h6 class="card-subtitle mb-2 text-muted">@genreStringBuilder.ToString()</h6>
-             <h6 class="card-subtitle mb-2 text-muted">@book.Pages pages by @book.PublisherName</h6>
-             @if (Context.Session.Keys.Contains("loggedUser"))
-             {
-                 <form method="post">
-                     <button type="submit" asp-action="AddToBookList" asp-route-id="@book.Id" class="btn btn-sm btn-primary card-link mt-2">Add to book list</button>
-                 </form>
-             }
-             @if (Context.Session.Keys.Contains("adminUser"))
-             {
-                 <button class="btn btn-sm btn-outline-danger card-link ml-1 mt-2">Edit</button>
-                 <button class="btn btn-sm btn-danger card-link ml-1 mt-2">Delete</button>
-             }
-         </div>
-     </div>
- </div>
+<div class="row d-inline-block mb-3 mr-3 ml-3">
+    <div class="card" style="width: 18rem;">
+        <div class="card-body">
+            <h5 class="card-title">@book.Title</h5>
+            @{ var genreStringBuilder = new StringBuilder();
+                var authorStringBuilder = new StringBuilder();
+                foreach (var genre in book.Genres)
+                {
+                    var genreName = genre.Name;
+                    genreStringBuilder.Append(genreName + ",");
+                }
+
+                foreach (var author in book.Authors)
+                {
+                    var authorName = author.Name;
+                    authorStringBuilder.Append(authorName + ",");
+                } }
+            <h6 class="card-subtitle mb-2 text-muted">@authorStringBuilder.ToString().TrimEnd(',')</h6>
+            <p class="card-text">@book.Description</p>
+            <h6 class="card-subtitle mb-2 text-muted">@genreStringBuilder.ToString().TrimEnd(',')</h6>
+            <h6 class="card-subtitle mb-2 text-muted">@book.Pages pages by @book.PublisherName</h6>
+            @if (Context.Session.Keys.Contains("loggedUser"))
+            {
+        <form method="post">
+            <button type="submit" asp-action="AddToBookList" asp-route-id="@book.Id" class="btn btn-sm btn-primary card-link mt-2">Add to book list</button>
+        </form>}
+            @if (Context.Session.Keys.Contains("adminUser"))
+            {
+            <div class="row text-center">
+            <a asp-action="Edit" asp-route-id="@book.Id" class="btn btn-sm btn-outline-danger card-link ml-1 mt-2">Edit</a>
+            <form method="post">
+                <button type="submit" asp-action="Delete" asp-route-id="@book.Id" class="btn btn-sm btn-danger card-link ml-1 mt-2">Delete</button>
+            </form>
+        </div>}
+        </div>
+    </div>
+</div>
 }

@@ -28,22 +28,30 @@
                 Books = new List<AllBooksViewModel>()
             };
 
-            var queryDbContext = dbContext.Books.Where(x=>x.IsDeleted == false)
-                                .Include(x => x.Authors).ThenInclude(x => x.Author)
-                                .Include(x => x.Genres).ThenInclude(x => x.Genre)
-                                .Include(x => x.Publisher);
+            var query = dbContext.Books
+                .Where(x => x.IsDeleted == false)
+                .Select(x => new
+                {
+                    Id = x.Id,
+                    Title = x.Title,
+                    Description = x.Description,
+                    Authors = x.Authors.Select(x => x.Author),
+                    Genres = x.Genres.Select(x => x.Genre),
+                    Pages = x.Pages,
+                    PublisherName = x.Publisher.Name,
+                }).ToList();
 
-            foreach (var book in queryDbContext)
-            {               
+            foreach (var book in query)
+            {
                 viewModels.Books.Add(new AllBooksViewModel
                 {
                     Id = book.Id,
                     Title = book.Title,
                     Description = book.Description,
-                    Authors = book.Authors.Where(x => x.AuthorId == x.AuthorId).ToList(),
+                    Authors = book.Authors.ToList(),
                     Genres = book.Genres.ToList(),
                     Pages = book.Pages,
-                    PublisherName = book.Publisher.Name,
+                    PublisherName = book.PublisherName,
                 });
             }
 
@@ -55,12 +63,14 @@
         {
             var userId = this.HttpContext.Session.GetInt32("loggedUser");
 
-            if (dbContext.Users.Include(x=>x.Books).FirstOrDefault(x=>x.Id == userId).Books.Where(x=>x.IsDeleted == false).Any(x=>x.BookId == id))
+            if (dbContext.Users.Include(x => x.Books).FirstOrDefault(x => x.Id == userId)
+                .Books.Where(x => x.IsDeleted == false).Any(x => x.BookId == id))
             {
                 return this.RedirectToAction("MyBooks", "Book");
             }
 
-            dbContext.Users.FirstOrDefault(x => x.Id == userId).Books.Add(new UserBooks { BookId = id });
+            dbContext.Users.FirstOrDefault(x => x.Id == userId).Books
+                .Add(new UserBooks { BookId = id });
 
             dbContext.SaveChanges();
             return this.RedirectToAction("MyBooks", "Book");
@@ -103,7 +113,7 @@
 
             if (loggedUser == null || loggedUser.Password != model.Password)
             {
-                ModelState.AddModelError(nameof(model.Username), "Incorrect username or password");               
+                ModelState.AddModelError(nameof(model.Username), "Incorrect username or password");
                 return this.View(model);
             }
 
@@ -120,7 +130,8 @@
 
         public IActionResult Logout()
         {
-            if (String.IsNullOrEmpty(this.HttpContext.Session.GetString("loggedUser")) && String.IsNullOrEmpty(this.HttpContext.Session.GetString("adminUser")))
+            if (String.IsNullOrEmpty(this.HttpContext.Session.GetString("loggedUser")) 
+                && String.IsNullOrEmpty(this.HttpContext.Session.GetString("adminUser")))
             {
                 return RedirectToAction("Index", "Home");
             }
@@ -150,18 +161,13 @@
                 return this.View(input);
             }
 
-            var username = input.Username;
-            var firstName = input.FirstName;
-            var lastName = input.LastName;
-            var password = input.Password;
-
-            if (password.Length < 4 && !password.Any(char.IsDigit))
+            if (input.Password.Length < 4 && !input.Password.Any(char.IsDigit))
             {
-                ModelState.AddModelError(nameof(input.Password),"Password needs to be at least 4 characters long and should contain a digit");
+                ModelState.AddModelError(nameof(input.Password), "Password needs to be at least 4 characters long and should contain a digit");
                 return this.View(input);
             }
 
-            var userExists = dbContext.Users.FirstOrDefault(x => x.Username == username);
+            var userExists = dbContext.Users.FirstOrDefault(x => x.Username == input.Username);
 
             if (userExists != null)
             {
@@ -171,11 +177,11 @@
 
             dbContext.Users.Add(new User
             {
-                Username = username,
-                FirstName = firstName,
-                LastName = lastName,
-                Password = password,
-                Role = new Role { Name = "User"}
+                Username = input.Username,
+                FirstName = input.FirstName,
+                LastName = input.LastName,
+                Password = input.Password,
+                Role = new Role { Name = "User" }
             });
 
             dbContext.SaveChanges();
@@ -184,8 +190,13 @@
         }
 
         [HttpPost]
-        public IActionResult Add(AddBookViewModel input)
+        public IActionResult Add(AddAndEditBookViewModel input)
         {
+            if (String.IsNullOrEmpty(this.HttpContext.Session.GetString("adminUser")))
+            {
+                return this.RedirectToAction("Index");
+            }
+
             var authorsArray = input.Authors.Split(",");
             var genresArray = input.Genres.Split(",");
 
@@ -195,23 +206,102 @@
                 Authors = new List<BookAuthors>(),
                 Pages = input.Pages,
                 Description = input.Description,
-                Publisher = new Publisher { Name = input.Publisher},
+                Publisher = new Publisher { Name = input.Publisher },
                 Users = new List<UserBooks>(),
                 Genres = new List<BookGenres>(),
             };
             book.Publisher.Books.Add(book);
             foreach (var author in authorsArray)
             {
-                book.Authors.Add(new BookAuthors { Author = new Author { Name = author, Books = book.Authors }, Book = book });
+                dbContext.BookAuthors.Add(new BookAuthors
+                { Author = new Author { Name = author }, Book = book });
             }
             foreach (var genre in genresArray)
             {
-                book.Genres.Add(new BookGenres { Genre = new Genre { Name = genre, Books = book.Genres }, Book = book });
+                dbContext.BookGenres.Add(new BookGenres
+                { Genre = new Genre { Name = genre }, Book = book });
             }
-            book.Users.Add(new UserBooks { UserId = (int) this.HttpContext.Session.GetInt32("adminUser") });
+            book.Users.Add(new UserBooks { UserId = (int)this.HttpContext.Session.GetInt32("adminUser") });
 
-            this.dbContext.Add(book);
+            this.dbContext.Books.Add(book);
             this.dbContext.SaveChanges();
+
+            return this.RedirectToAction("Index");
+        }
+        
+        public IActionResult Edit(int id)
+        {
+            if (String.IsNullOrEmpty(this.HttpContext.Session.GetString("adminUser")))
+            {
+                return this.RedirectToAction("Index");
+            }
+
+            var bookToEdit = dbContext.Books
+                .Where(x => x.Id == id)
+                .Select(x=> new 
+                { 
+                    Id = x.Id,
+                    Authors = x.Authors.Select(x=>x.Author.Name),
+                    Genres = x.Genres.Select(x=>x.Genre.Name),
+                    Title = x.Title,
+                    Description = x.Description,
+                    Pages = x.Pages,
+                    PublisherName = x.Publisher.Name,
+                }).FirstOrDefault();
+
+            var viewModel = new AddAndEditBookViewModel
+            {
+                Id = bookToEdit.Id,
+                Title = bookToEdit.Title,
+                Description = bookToEdit.Description,
+                Pages = bookToEdit.Pages,
+                Publisher = bookToEdit.PublisherName,
+            };
+
+            foreach (var author in bookToEdit.Authors)
+            {
+                viewModel.Authors += author + ", ";
+            }
+
+            foreach (var genre in bookToEdit.Genres)
+            {
+                viewModel.Genres += genre + ", ";
+            }
+
+            return this.View(viewModel);
+        }
+
+        [HttpPost]
+
+        public IActionResult Edit(AddAndEditBookViewModel input)
+        {
+            var bookToEdit = dbContext.Books.Include(x=>x.Publisher)
+               .Where(x => x.Id == input.Id)
+              .FirstOrDefault();
+
+            bookToEdit.Title = input.Title;
+            bookToEdit.Description = input.Description;
+            bookToEdit.Pages = input.Pages;
+            bookToEdit.Publisher.Name = input.Publisher;
+
+            dbContext.SaveChanges();
+            return this.RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public IActionResult Delete(int id)
+        {
+            if (String.IsNullOrEmpty(this.HttpContext.Session.GetString("adminUser")))
+            {
+                return this.RedirectToAction("Index");
+            }
+
+            var bookToRemove = dbContext.Books
+                .FirstOrDefault(x => x.Id == id);
+
+            bookToRemove.IsDeleted = true;
+
+            dbContext.SaveChanges();
 
             return this.RedirectToAction("Index");
         }

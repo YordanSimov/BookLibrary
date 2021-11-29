@@ -1,7 +1,9 @@
 ﻿namespace BookLibrary.ViewModels
 {
-    public class AddBookViewModel
+    public class AddAndEditBookViewModel
     {
+        public int? Id { get; set; }
+
         public string Title { get; set; }
 
         public string Description { get; set; }

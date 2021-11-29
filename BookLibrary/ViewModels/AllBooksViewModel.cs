@@ -16,8 +16,8 @@
 
         public string PublisherName { get; set; }
 
-        public ICollection<BookAuthors> Authors { get; set; }
+        public ICollection<Author> Authors { get; set; }
 
-        public ICollection<BookGenres> Genres { get; set; }
+        public ICollection<Genre> Genres { get; set; }
     }
 }

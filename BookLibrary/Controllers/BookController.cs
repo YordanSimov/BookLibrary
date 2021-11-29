@@ -32,25 +32,33 @@
                 Books = new List<AllBooksViewModel>()
             };
 
-            var queryDbContext = dbContext.Users
-                .Include(x=>x.Books).ThenInclude(x=>x.Book).ThenInclude(x => x.Authors).ThenInclude(x => x.Author)
-                .Include(x => x.Books).ThenInclude(x=>x.Book).ThenInclude(x => x.Genres).ThenInclude(x=>x.Genre)
-                .Include(x => x.Books).ThenInclude(x=>x.Book).ThenInclude(x => x.Publisher)
-                .FirstOrDefault(x => x.Id == userId).Books
-                .Where(x=>x.IsDeleted == false).Where(x => x.Book.IsDeleted == false).Select(x=>x.Book);
+            var query = dbContext.UserBooks
+                .Where(x => x.UserId == userId)
+                .Where(x => x.IsDeleted == false)
+                .Where(x => x.Book.IsDeleted == false)
+                .Select(u => new
+                {
+                    Id = u.Book.Id,
+                    Title = u.Book.Title,
+                    Description = u.Book.Description,
+                    Authors = u.Book.Authors.Select(x => x.Author),
+                    Genres = u.Book.Genres.Select(x => x.Genre),
+                    PublisherName = u.Book.Publisher.Name,
+                    Pages = u.Book.Pages,
+                }).ToList();
 
 
-            foreach (var book in queryDbContext)
+            foreach (var book in query)
             {
                 viewModels.Books.Add(new AllBooksViewModel
                 {
                     Id = book.Id,
                     Title = book.Title,
                     Description = book.Description,
-                    Authors = book.Authors.Where(x => x.AuthorId == x.AuthorId).ToList(),
+                    Authors = book.Authors.ToList(),
                     Genres = book.Genres.ToList(),
                     Pages = book.Pages,
-                    PublisherName = book.Publisher.Name,
+                    PublisherName = book.PublisherName,
                 });
             }
 
@@ -62,8 +70,12 @@
         {
             var userId = this.HttpContext.Session.GetInt32("loggedUser");
 
-            var removeBook = dbContext.Users.Include(x=>x.Books).FirstOrDefault(x => x.Id == userId).Books.Where(x => x.BookId == id).FirstOrDefault();
-            removeBook.IsDeleted = true;
+            var bookToRemove = dbContext.UserBooks
+                .Where(x => x.UserId == userId)
+                .Where(x => x.BookId == id)
+                .FirstOrDefault(x => x.IsDeleted == false);
+
+            bookToRemove.IsDeleted = true;
 
             dbContext.SaveChanges();
             return this.RedirectToAction("MyBooks", "Book");

@@ -1,5 +1,6 @@
 ﻿namespace BookLibrary.Data
 {
+    using BookLibrary.Data.Models;
     using Microsoft.EntityFrameworkCore;
     using System.Linq;
 
@@ -20,6 +21,13 @@
         public DbSet<Publisher> Publishers { get; set; }
 
         public DbSet<User> Users { get; set; }
+
+        public DbSet<BookGenres> BookGenres { get; set; }
+
+        public DbSet<BookAuthors> BookAuthors { get; set; }
+
+        public DbSet<UserBooks> UserBooks { get; set; }
+
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

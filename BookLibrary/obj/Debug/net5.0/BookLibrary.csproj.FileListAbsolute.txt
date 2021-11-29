@@ -73,3 +73,4 @@ E:\programirane gluposti\BookLibrary\BookLibrary\obj\Debug\net5.0\Razor\Views\Ho
 E:\programirane gluposti\BookLibrary\BookLibrary\obj\Debug\net5.0\Razor\Views\Home\Register.cshtml.g.cs
 E:\programirane gluposti\BookLibrary\BookLibrary\obj\Debug\net5.0\Razor\Views\Home\Login.cshtml.g.cs
 E:\programirane gluposti\BookLibrary\BookLibrary\obj\Debug\net5.0\Razor\Views\Book\MyBooks.cshtml.g.cs
+E:\programirane gluposti\BookLibrary\BookLibrary\obj\Debug\net5.0\Razor\Views\Home\Edit.cshtml.g.cs

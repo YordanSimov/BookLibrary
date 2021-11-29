@@ -2,8 +2,8 @@
 @using System.Text;
 
 @{
-    TempData["Title"] = "My books";
-}
+    TempData["Title"] = "My books"; 
+ }
 
 <div class="text-center">
     <h1 class="display-4">Welcome to your Book Library!</h1>
@@ -11,31 +11,31 @@
 <br />
 @foreach (var book in Model.Books)
 {
+<div class="row d-inline-block mb-3 mr-3 ml-3">
     <div class="card" style="width: 18rem;">
         <div class="card-body">
             <h5 class="card-title">@book.Title</h5>
-            @{
-                var genreStringBuilder = new StringBuilder();
+            @{ var genreStringBuilder = new StringBuilder();
                 var authorStringBuilder = new StringBuilder();
                 foreach (var genre in book.Genres)
                 {
-                    var genreName = genre.Genre.Name;
+
+                    var genreName = genre.Name;
                     genreStringBuilder.Append(genreName + ",");
                 }
 
                 foreach (var author in book.Authors)
                 {
-                    var authorName = author.Author.Name;
+                    var authorName = author.Name;
                     authorStringBuilder.Append(authorName + ",");
-                }
-            }
-            <h6 class="card-subtitle mb-2 text-muted">@authorStringBuilder.ToString()</h6>
-            <p class="card-text">@book.Description.Substring(0, 34)...</p>
-            <h6 class="card-subtitle mb-2 text-muted">@genreStringBuilder.ToString()</h6>
+                } }
+            <h6 class="card-subtitle mb-2 text-muted">@authorStringBuilder.ToString().TrimEnd(',')</h6>
+            <p class="card-text">@book.Description</p>
+            <h6 class="card-subtitle mb-2 text-muted">@genreStringBuilder.ToString().TrimEnd(',')</h6>
             <h6 class="card-subtitle mb-2 text-muted">@book.Pages pages</h6>
             <form method="post">
                 <button asp-controller="Book" asp-action="RemoveBook" asp-route-id="@book.Id" class="btn btn-sm btn-danger card-link ml-1 mt-2">Remove</button>
             </form>
         </div>
     </div>
-}
+</div>}
