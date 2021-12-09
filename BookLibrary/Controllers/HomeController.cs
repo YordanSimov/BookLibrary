@@ -130,7 +130,7 @@
 
         public IActionResult Logout()
         {
-            if (String.IsNullOrEmpty(this.HttpContext.Session.GetString("loggedUser")) 
+            if (String.IsNullOrEmpty(this.HttpContext.Session.GetString("loggedUser"))
                 && String.IsNullOrEmpty(this.HttpContext.Session.GetString("adminUser")))
             {
                 return RedirectToAction("Index", "Home");
@@ -161,7 +161,7 @@
                 return this.View(input);
             }
 
-            if (input.Password.Length < 4 && !input.Password.Any(char.IsDigit))
+            if (input.Password.Length < 4 || !input.Password.Any(char.IsDigit))
             {
                 ModelState.AddModelError(nameof(input.Password), "Password needs to be at least 4 characters long and should contain a digit");
                 return this.View(input);
@@ -181,7 +181,7 @@
                 FirstName = input.FirstName,
                 LastName = input.LastName,
                 Password = input.Password,
-                Role = new Role { Name = "User" }
+                Role = input.Username == "admin" ? new Role { Name = "Admin" } : new Role { Name = "User"} 
             });
 
             dbContext.SaveChanges();
@@ -228,7 +228,7 @@
 
             return this.RedirectToAction("Index");
         }
-        
+
         public IActionResult Edit(int id)
         {
             if (String.IsNullOrEmpty(this.HttpContext.Session.GetString("adminUser")))
@@ -238,11 +238,11 @@
 
             var bookToEdit = dbContext.Books
                 .Where(x => x.Id == id)
-                .Select(x=> new 
-                { 
+                .Select(x => new
+                {
                     Id = x.Id,
-                    Authors = x.Authors.Select(x=>x.Author.Name),
-                    Genres = x.Genres.Select(x=>x.Genre.Name),
+                    Authors = x.Authors.Select(x => x.Author.Name),
+                    Genres = x.Genres.Select(x => x.Genre.Name),
                     Title = x.Title,
                     Description = x.Description,
                     Pages = x.Pages,
@@ -275,7 +275,7 @@
 
         public IActionResult Edit(AddAndEditBookViewModel input)
         {
-            var bookToEdit = dbContext.Books.Include(x=>x.Publisher)
+            var bookToEdit = dbContext.Books.Include(x => x.Publisher)
                .Where(x => x.Id == input.Id)
               .FirstOrDefault();
 
@@ -283,7 +283,7 @@
             bookToEdit.Description = input.Description;
             bookToEdit.Pages = input.Pages;
             bookToEdit.Publisher.Name = input.Publisher;
-
+                
             dbContext.SaveChanges();
             return this.RedirectToAction("Index");
         }
